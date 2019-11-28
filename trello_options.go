@@ -11,10 +11,10 @@ import (
 
 // TrelloOptions stores options that the user has selected
 type TrelloOptions struct {
-	Board         *trello.Board
-	List          *trello.List
-	User          *trello.Member
-	ProcessImages bool
+	Board                  *trello.Board
+	List                   *trello.List
+	User                   *trello.Member
+	ProcessImagesToDropbox bool
 }
 
 // SetupTrelloOptionsFromUser calls all the functions which consist of questions
@@ -22,7 +22,7 @@ type TrelloOptions struct {
 func SetupTrelloOptionsFromUser() *TrelloOptions {
 	var t TrelloOptions
 
-	t.promptUserShouldMigrateAttachments()
+	t.promptUserShouldMigrateAttachmentsToDropbox()
 	t.getCurrentUser()
 	t.getBoardsAndPromptUser()
 	t.getListsAndPromptUser()
@@ -30,7 +30,7 @@ func SetupTrelloOptionsFromUser() *TrelloOptions {
 	return &t
 }
 
-func (t *TrelloOptions) promptUserShouldMigrateAttachments() {
+func (t *TrelloOptions) promptUserShouldMigrateAttachmentsToDropbox() {
 	fmt.Println("Would you like to migrate all attachments from trello cards?")
 	fmt.Println("This will entail downloading the attachments and uploading to dropbox")
 	fmt.Println("A dropbox account will be required for the token")
@@ -45,7 +45,7 @@ func (t *TrelloOptions) promptUserShouldMigrateAttachments() {
 	}
 
 	if i == 0 {
-		t.ProcessImages = true
+		t.ProcessImagesToDropbox = true
 		if dropboxToken == "" {
 			log.Fatal("Dropbox token not supplied unable to continue")
 		}

@@ -64,7 +64,7 @@ func ProcessCardsForExporting(crds *[]trello.Card, opts *TrelloOptions) *[]Card 
 		c.ShortURL = card.ShortUrl
 		c.IDOwners = card.IdMembers
 
-		if opts.ProcessImages {
+		if opts.ProcessImagesToDropbox {
 			c.Attachments = downloadCardAttachmentsUploadToDropbox(&card)
 		}
 
