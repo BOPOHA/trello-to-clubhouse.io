@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	ch "github.com/jnormington/clubhouse-go"
+	ch "github.com/djthorpe/clubhouse-go"
 )
 
 var outputFormat = "%-40s %-17s %s\n"

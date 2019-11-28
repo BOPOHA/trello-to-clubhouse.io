@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	ch "github.com/jnormington/clubhouse-go"
+	ch "github.com/djthorpe/clubhouse-go"
 	trello "github.com/jnormington/go-trello"
 )
 

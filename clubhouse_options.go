@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	ch "github.com/jnormington/clubhouse-go"
+	ch "github.com/djthorpe/clubhouse-go"
 )
 
 //ClubhouseOptions stores the options selected by the user

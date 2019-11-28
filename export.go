@@ -177,7 +177,7 @@ func downloadCardAttachmentsUploadToDropbox(card *trello.Card) map[string]string
 			fmt.Printf("Error occurred uploading file to dropbox continuing... %s\n", err)
 		} else {
 			// Must be success created a shared url
-			s := dropbox.CreateSharedLinkInput{path, false}
+			s := dropbox.CreateSharedLinkInput{path}
 			out, err := d.Sharing.CreateSharedLink(&s)
 			if err != nil {
 				fmt.Printf("Error occurred sharing file on dropbox continuing... %s\n", err)
