@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"time"
 
-	trello "github.com/jnormington/go-trello"
-	dropbox "github.com/tj/go-dropbox"
+	"github.com/jnormington/go-trello"
+	"github.com/tj/go-dropbox"
 )
 
 var dateLayout = "2006-01-02T15:04:05.000Z"

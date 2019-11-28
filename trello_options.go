@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	trello "github.com/jnormington/go-trello"
+	"github.com/jnormington/go-trello"
 )
 
 // TrelloOptions stores options that the user has selected

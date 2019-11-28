@@ -2,12 +2,43 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	ch "github.com/djthorpe/clubhouse-go"
 )
 
 var outputFormat = "%-40s %-17s %s\n"
+
+type exitsCardBehavior int
+
+const (
+	SkipExists exitsCardBehavior = iota
+	DeleteExists
+	AllowDupes
+)
+
+var recreateCardsBool = func() exitsCardBehavior {
+	switch strings.ToLower(recreateCards) {
+	case "1", "true", "yes":
+		return DeleteExists
+	case "skip":
+		return SkipExists
+	default:
+		return AllowDupes
+	}
+}()
+
+func getStoryDuplicates(opts *ClubhouseOptions, card Card) []int64 {
+	var dupes []int64
+	stories, _ := opts.ClubhouseEntry.ListStories(opts.Project.ID)
+	for _, story := range stories {
+		if story.Name == card.Name {
+			dupes = append(dupes, story.ID)
+		}
+	}
+	return dupes
+}
 
 // ImportCardsIntoClubhouse takes *[]Card, *ClubhouseOptions and builds a clubhouse Story
 // this story from both the card and clubhouse options and creates via the api.
@@ -16,6 +47,21 @@ func ImportCardsIntoClubhouse(cards *[]Card, opts *ClubhouseOptions, um *UserMap
 	fmt.Printf(outputFormat+"\n", "Trello Card Link", "Import Status", "Error/Story ID")
 
 	for _, c := range *cards {
+		if recreateCardsBool == DeleteExists {
+			for _, id := range getStoryDuplicates(opts, c) {
+				err := opts.ClubhouseEntry.DeleteStory(id)
+				if err != nil {
+					fmt.Printf(outputFormat, c.ShortURL, "Deleted Matching", fmt.Sprintf("Story ID: %d", id))
+				}
+			}
+		}
+
+		if recreateCardsBool == SkipExists {
+			if len(getStoryDuplicates(opts, c)) > 0 {
+				continue
+			}
+		}
+
 		//We could use bulk update but lets give the user some prompt feedback
 		st, err := opts.ClubhouseEntry.CreateStory(*buildClubhouseStory(&c, opts, um))
 		if err != nil {

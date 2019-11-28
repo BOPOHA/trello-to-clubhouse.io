@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	ch "github.com/djthorpe/clubhouse-go"
-	trello "github.com/jnormington/go-trello"
+	"github.com/jnormington/go-trello"
 )
 
 const csvFile = "userMappingTtoC.csv"

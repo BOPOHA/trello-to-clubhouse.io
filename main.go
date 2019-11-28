@@ -12,6 +12,7 @@ var (
 	trelloToken    = os.Getenv("TRELLO_TOKEN")
 	trelloKey      = os.Getenv("TRELLO_KEY")
 	dropboxToken   = os.Getenv("DROPBOX_TOKEN")
+	recreateCards  = os.Getenv("OPT_RECREATE_CARDS")
 
 	stdinReader   = bufio.NewReader(os.Stdin)
 	errOutOfRange = "Number input is out of range. Try again"
