@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"io"
 	"log"
 	"net/http"
@@ -10,6 +11,9 @@ import (
 
 	"github.com/jnormington/go-trello"
 	"github.com/tj/go-dropbox"
+
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 var dateLayout = "2006-01-02T15:04:05.000Z"
@@ -66,6 +70,9 @@ func ProcessCardsForExporting(crds *[]trello.Card, opts *TrelloOptions) *[]Card 
 
 		if opts.ProcessImagesToDropbox {
 			c.Attachments = downloadCardAttachmentsUploadToDropbox(&card)
+		}
+		if opts.ProcessImagesToAWSS3 {
+			c.Attachments = downloadCardAttachmentsUploadToAWSS3(&card)
 		}
 
 		cards = append(cards, c)
@@ -199,4 +206,51 @@ func downloadTrelloAttachment(attachment *trello.Attachment) io.ReadCloser {
 	}
 
 	return resp.Body
+}
+
+func downloadCardAttachmentsUploadToAWSS3(card *trello.Card) map[string]string {
+	fileIds := map[string]string{}
+	if len(awsS3Bucket) == 0 {
+		log.Fatal("Undefined env variable OPT_AWS_S3_BUCKET.")
+	}
+	attachments, err := card.Attachments()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sess, err := session.NewSessionWithOptions(session.Options{SharedConfigState: session.SharedConfigEnable})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	uploader := s3manager.NewUploader(sess)
+
+	for i, f := range attachments {
+		name := safeFileNameRegexp.ReplaceAllString(f.Name, "_")
+		folderPath := fmt.Sprintf("/trello/%s/%s/", card.IdList, card.Id)
+		path := fmt.Sprintf("%s%d%s%s", folderPath, i, "_", name)
+
+		resp, err := http.Get(f.Url)
+		if err != nil {
+			fmt.Printf("Error in download Trello attachment from %s, %s\n", f.Url, err)
+			continue
+		}
+
+		// Upload the file to S3.
+		result, err := uploader.Upload(&s3manager.UploadInput{
+			Bucket:             aws.String(awsS3Bucket),
+			Key:                aws.String(path),
+			Body:               resp.Body,
+			ContentDisposition: aws.String("attachment"),
+			ContentType:        aws.String(resp.Header.Get("Content-Type")),
+		})
+		if err != nil {
+			fmt.Printf("Error occurred uploading file to AWS S3 continuing... %s\n", err)
+		} else {
+			fileIds[name] = aws.StringValue(&result.Location)
+		}
+		resp.Body.Close()
+	}
+
+	return fileIds
 }

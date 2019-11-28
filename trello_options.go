@@ -15,6 +15,7 @@ type TrelloOptions struct {
 	List                   *trello.List
 	User                   *trello.Member
 	ProcessImagesToDropbox bool
+	ProcessImagesToAWSS3   bool
 }
 
 // SetupTrelloOptionsFromUser calls all the functions which consist of questions
@@ -23,6 +24,7 @@ func SetupTrelloOptionsFromUser() *TrelloOptions {
 	var t TrelloOptions
 
 	t.promptUserShouldMigrateAttachmentsToDropbox()
+	t.promptUserShouldMigrateAttachmentsToAWSS3()
 	t.getCurrentUser()
 	t.getBoardsAndPromptUser()
 	t.getListsAndPromptUser()
@@ -49,6 +51,23 @@ func (t *TrelloOptions) promptUserShouldMigrateAttachmentsToDropbox() {
 		if dropboxToken == "" {
 			log.Fatal("Dropbox token not supplied unable to continue")
 		}
+	}
+}
+func (t *TrelloOptions) promptUserShouldMigrateAttachmentsToAWSS3() {
+	fmt.Println("Would you like to migrate all attachments from trello cards?")
+	fmt.Println("This will entail downloading the attachments and uploading to ClubHouse")
+
+	for i, b := range yesNoOpts {
+		fmt.Printf("[%d] %s\n", i, b)
+	}
+
+	i := promptUserSelectResource()
+	if i >= len(yesNoOpts) {
+		log.Fatal(errOutOfRange)
+	}
+
+	if i == 0 {
+		t.ProcessImagesToAWSS3 = true
 	}
 }
 
