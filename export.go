@@ -22,18 +22,18 @@ var safeFileNameRegexp = regexp.MustCompile(`[^a-zA-Z0-9_.]+`)
 
 // Card holds all the attributes needed for migrating a complete card from Trello to Clubhouse
 type Card struct {
-	Name        string            `json:"name"`
-	Desc        string            `json:"desc"`
-	Labels      []string          `json:"labels"`
-	DueDate     *time.Time        `json:"due_date"`
-	IDCreator   string            `json:"id_creator"`
-	IDOwners    []string          `json:"id_owners"`
-	CreatedAt   *time.Time        `json:"created_at"`
-	Comments    []Comment         `json:"comments"`
-	Tasks       []Task            `json:"checklists"`
-	Position    float32           `json:"position"`
-	ShortURL    string            `json:"url"`
-	Attachments map[string]string `json:"attachments"`
+	Name        string                   `json:"name"`
+	Desc        string                   `json:"desc"`
+	Labels      []string                 `json:"labels"`
+	DueDate     *time.Time               `json:"due_date"`
+	IDCreator   string                   `json:"id_creator"`
+	IDOwners    []string                 `json:"id_owners"`
+	CreatedAt   *time.Time               `json:"created_at"`
+	Comments    []Comment                `json:"comments"`
+	Tasks       []Task                   `json:"checklists"`
+	Position    float32                  `json:"position"`
+	ShortURL    string                   `json:"url"`
+	Attachments map[string]chAttachments `json:"attachments"`
 }
 
 // Task builds a basic object based off trello.Task
@@ -48,6 +48,12 @@ type Comment struct {
 	IDCreator   string
 	CreatorName string
 	CreatedAt   *time.Time
+}
+
+// Attachments for ClubHouse with creator's id
+type chAttachments struct {
+	Url             string
+	TrelloIDCreator string
 }
 
 // ProcessCardsForExporting takes *[]trello.Card, *TrelloOptions and builds up a Card
@@ -158,8 +164,8 @@ func parseDateOrReturnNil(strDate string) *time.Time {
 	return &d
 }
 
-func downloadCardAttachmentsUploadToDropbox(card *trello.Card) map[string]string {
-	sharedLinks := map[string]string{}
+func downloadCardAttachmentsUploadToDropbox(card *trello.Card) map[string]chAttachments {
+	sharedLinks := map[string]chAttachments{}
 	d := dropbox.New(dropbox.NewConfig(dropboxToken))
 
 	attachments, err := card.Attachments()
@@ -171,26 +177,26 @@ func downloadCardAttachmentsUploadToDropbox(card *trello.Card) map[string]string
 		name := safeFileNameRegexp.ReplaceAllString(f.Name, "_")
 		path := fmt.Sprintf("/trello/%s/%s/%d%s%s", card.IdList, card.Id, i, "_", name)
 
-		io := downloadTrelloAttachment(&f)
+		ioReader := downloadTrelloAttachment(&f)
 		_, err := d.Files.Upload(&dropbox.UploadInput{
 			Path:   path,
 			Mode:   dropbox.WriteModeAdd,
-			Reader: io,
+			Reader: ioReader,
 			Mute:   true,
 		})
 
-		io.Close()
+		ioReader.Close()
 
 		if err != nil {
 			fmt.Printf("Error occurred uploading file to dropbox continuing... %s\n", err)
 		} else {
 			// Must be success created a shared url
-			s := dropbox.CreateSharedLinkInput{path}
+			s := dropbox.CreateSharedLinkInput{Path: path}
 			out, err := d.Sharing.CreateSharedLink(&s)
 			if err != nil {
 				fmt.Printf("Error occurred sharing file on dropbox continuing... %s\n", err)
 			} else {
-				sharedLinks[name] = out.URL
+				sharedLinks[name] = chAttachments{out.URL, f.IdMember}
 			}
 		}
 	}
@@ -209,8 +215,8 @@ func downloadTrelloAttachment(attachment *trello.Attachment) io.ReadCloser {
 	return resp.Body
 }
 
-func downloadCardAttachmentsUploadToAWSS3(card *trello.Card) map[string]string {
-	fileIds := map[string]string{}
+func downloadCardAttachmentsUploadToAWSS3(card *trello.Card) map[string]chAttachments {
+	fileIds := map[string]chAttachments{}
 	if len(awsS3Bucket) == 0 {
 		log.Fatal("Undefined env variable OPT_AWS_S3_BUCKET.")
 	}
@@ -265,7 +271,7 @@ func downloadCardAttachmentsUploadToAWSS3(card *trello.Card) map[string]string {
 			fmt.Printf("Skipped uploading file to AWS S3. File exist: %s\n", s3keyURL)
 		}
 
-		fileIds[name] = s3keyURL
+		fileIds[name] = chAttachments{s3keyURL, f.IdMember}
 	}
 
 	return fileIds

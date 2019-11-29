@@ -47,6 +47,7 @@ func ImportCardsIntoClubhouse(cards *[]Card, opts *ClubhouseOptions, um *UserMap
 	fmt.Printf(outputFormat+"\n", "Trello Card Link", "Import Status", "Error/Story ID")
 
 	for _, c := range *cards {
+		c.IDOwners = []string{}
 		if recreateCardsBool == DeleteExists {
 			for _, id := range getStoryDuplicates(opts, c) {
 				err := opts.ClubhouseEntry.DeleteStory(id)
@@ -73,20 +74,20 @@ func ImportCardsIntoClubhouse(cards *[]Card, opts *ClubhouseOptions, um *UserMap
 	}
 }
 
-func buildLinkFiles(card *Card, opts *ClubhouseOptions) []int64 {
-	ids := []int64{}
+func buildLinkFiles(card *Card, opts *ClubhouseOptions, um *UserMap) []int64 {
+	var ids []int64
 
 	for k, v := range card.Attachments {
 		lf := ch.CreateLinkedFile{
 			Name:       k,
 			Type:       "url",
-			URL:        v,
-			UploaderID: opts.ImportMember.ID,
+			URL:        v.Url,
+			UploaderID: um.GetCreator(v.TrelloIDCreator),
 		}
-
+		fmt.Sprintf("CARD: %+v", lf)
 		r, err := opts.ClubhouseEntry.CreateLinkedFiles(lf)
 		if err != nil {
-			fmt.Println("Fail to create linked file card name:", card.Name, "Dropbox link:", v, "Err:", err)
+			fmt.Println("Fail to create linked file card name:", card.Name, "link:", v, "Err:", err)
 		} else {
 			ids = append(ids, r.ID)
 		}
@@ -115,12 +116,12 @@ func buildClubhouseStory(card *Card, opts *ClubhouseOptions, um *UserMap) *ch.Cr
 		Tasks:    *buildTasks(card),
 		Comments: *buildComments(card, opts.AddCommentWithTrelloLink, um),
 
-		LinkedFileIds: buildLinkFiles(card, opts),
+		LinkedFileIds: buildLinkFiles(card, opts, um),
 	}
 }
 
 func mapOwnersFromTrelloCard(c *Card, um *UserMap) []string {
-	owners := []string{}
+	var owners []string
 
 	for _, o := range c.IDOwners {
 		owners = append(owners, um.GetCreator(o))
@@ -130,7 +131,7 @@ func mapOwnersFromTrelloCard(c *Card, um *UserMap) []string {
 }
 
 func buildComments(card *Card, addCommentWithTrelloLink bool, um *UserMap) *[]ch.CreateComment {
-	comments := []ch.CreateComment{}
+	var comments []ch.CreateComment
 
 	for _, cm := range card.Comments {
 		com := ch.CreateComment{
@@ -155,7 +156,7 @@ func buildComments(card *Card, addCommentWithTrelloLink bool, um *UserMap) *[]ch
 }
 
 func buildTasks(card *Card) *[]ch.CreateTask {
-	tasks := []ch.CreateTask{}
+	var tasks []ch.CreateTask
 
 	for _, t := range card.Tasks {
 		ts := ch.CreateTask{
@@ -170,7 +171,7 @@ func buildTasks(card *Card) *[]ch.CreateTask {
 }
 
 func buildLabels(card *Card) *[]ch.CreateLabel {
-	labels := []ch.CreateLabel{}
+	var labels []ch.CreateLabel
 
 	for _, l := range card.Labels {
 		labels = append(labels, ch.CreateLabel{Name: l})
