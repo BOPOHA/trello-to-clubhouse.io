@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"io"
 	"log"
 	"net/http"
@@ -224,31 +225,47 @@ func downloadCardAttachmentsUploadToAWSS3(card *trello.Card) map[string]string {
 	}
 
 	uploader := s3manager.NewUploader(sess)
+	s3api := s3.New(sess)
 
 	for i, f := range attachments {
 		name := safeFileNameRegexp.ReplaceAllString(f.Name, "_")
 		folderPath := fmt.Sprintf("/trello/%s/%s/", card.IdList, card.Id)
 		path := fmt.Sprintf("%s%d%s%s", folderPath, i, "_", name)
 
-		resp, err := http.Get(f.Url)
+		// check if file already exists
+		_, err := s3api.HeadObject(&s3.HeadObjectInput{Bucket: aws.String(awsS3Bucket), Key: aws.String(path)})
+		s3apiParams := s3.HeadObjectInput{Bucket: aws.String(awsS3Bucket), Key: aws.String(path)}
+		s3keyURL := ""
+
 		if err != nil {
-			fmt.Printf("Error in download Trello attachment from %s, %s\n", f.Url, err)
-			continue
+			// uploading file from trello
+			resp, err := http.Get(f.Url)
+			if err != nil {
+				fmt.Printf("Error in download Trello attachment from %s, %s\n", f.Url, err)
+				continue
+			}
+
+			// Upload the file to S3.
+			result, err := uploader.Upload(&s3manager.UploadInput{
+				Bucket:      aws.String(awsS3Bucket),
+				Key:         aws.String(path),
+				ACL:         aws.String("private"),
+				Body:        resp.Body,
+				ContentType: aws.String(resp.Header.Get("Content-Type")),
+			})
+			if err != nil {
+				fmt.Printf("Error occurred uploading file %s to AWS S3 continuing... %s\n", path, err.Error())
+				continue
+			} else {
+				s3keyURL = aws.StringValue(&result.Location)
+			}
+			resp.Body.Close()
+		} else {
+			s3keyURL := fmt.Sprintf("%s/%s%s", s3api.Endpoint, *s3apiParams.Bucket, *s3apiParams.Key)
+			fmt.Printf("Skipped uploading file to AWS S3. File exist: %s\n", s3keyURL)
 		}
 
-		// Upload the file to S3.
-		result, err := uploader.Upload(&s3manager.UploadInput{
-			Bucket:      aws.String(awsS3Bucket),
-			Key:         aws.String(path),
-			Body:        resp.Body,
-			ContentType: aws.String(resp.Header.Get("Content-Type")),
-		})
-		if err != nil {
-			fmt.Printf("Error occurred uploading file to AWS S3 continuing... %s\n", err)
-		} else {
-			fileIds[name] = aws.StringValue(&result.Location)
-		}
-		resp.Body.Close()
+		fileIds[name] = s3keyURL
 	}
 
 	return fileIds
