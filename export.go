@@ -238,11 +238,10 @@ func downloadCardAttachmentsUploadToAWSS3(card *trello.Card) map[string]string {
 
 		// Upload the file to S3.
 		result, err := uploader.Upload(&s3manager.UploadInput{
-			Bucket:             aws.String(awsS3Bucket),
-			Key:                aws.String(path),
-			Body:               resp.Body,
-			ContentDisposition: aws.String("attachment"),
-			ContentType:        aws.String(resp.Header.Get("Content-Type")),
+			Bucket:      aws.String(awsS3Bucket),
+			Key:         aws.String(path),
+			Body:        resp.Body,
+			ContentType: aws.String(resp.Header.Get("Content-Type")),
 		})
 		if err != nil {
 			fmt.Printf("Error occurred uploading file to AWS S3 continuing... %s\n", err)
