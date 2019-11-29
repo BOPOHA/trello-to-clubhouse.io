@@ -261,7 +261,7 @@ func downloadCardAttachmentsUploadToAWSS3(card *trello.Card) map[string]string {
 			}
 			resp.Body.Close()
 		} else {
-			s3keyURL := fmt.Sprintf("%s/%s%s", s3api.Endpoint, *s3apiParams.Bucket, *s3apiParams.Key)
+			s3keyURL = fmt.Sprintf("%s/%s%s", s3api.Endpoint, *s3apiParams.Bucket, *s3apiParams.Key)
 			fmt.Printf("Skipped uploading file to AWS S3. File exist: %s\n", s3keyURL)
 		}
 
