@@ -33,7 +33,7 @@ type Card struct {
 	Tasks       []Task                   `json:"checklists"`
 	Position    float32                  `json:"position"`
 	ShortURL    string                   `json:"url"`
-	Attachments map[string]chAttachments `json:"attachments"`
+	Attachments map[string]TrAttachments `json:"attachments"`
 }
 
 // Task builds a basic object based off trello.Task
@@ -51,9 +51,9 @@ type Comment struct {
 }
 
 // Attachments for ClubHouse with creator's id
-type chAttachments struct {
-	Url             string
-	TrelloIDCreator string
+type TrAttachments struct {
+	Url       string
+	IDCreator string
 }
 
 // ProcessCardsForExporting takes *[]trello.Card, *TrelloOptions and builds up a Card
@@ -164,8 +164,8 @@ func parseDateOrReturnNil(strDate string) *time.Time {
 	return &d
 }
 
-func downloadCardAttachmentsUploadToDropbox(card *trello.Card) map[string]chAttachments {
-	sharedLinks := map[string]chAttachments{}
+func downloadCardAttachmentsUploadToDropbox(card *trello.Card) map[string]TrAttachments {
+	sharedLinks := map[string]TrAttachments{}
 	d := dropbox.New(dropbox.NewConfig(dropboxToken))
 
 	attachments, err := card.Attachments()
@@ -196,7 +196,7 @@ func downloadCardAttachmentsUploadToDropbox(card *trello.Card) map[string]chAtta
 			if err != nil {
 				fmt.Printf("Error occurred sharing file on dropbox continuing... %s\n", err)
 			} else {
-				sharedLinks[name] = chAttachments{out.URL, f.IdMember}
+				sharedLinks[name] = TrAttachments{out.URL, f.IdMember}
 			}
 		}
 	}
@@ -215,8 +215,8 @@ func downloadTrelloAttachment(attachment *trello.Attachment) io.ReadCloser {
 	return resp.Body
 }
 
-func downloadCardAttachmentsUploadToAWSS3(card *trello.Card) map[string]chAttachments {
-	fileIds := map[string]chAttachments{}
+func downloadCardAttachmentsUploadToAWSS3(card *trello.Card) map[string]TrAttachments {
+	fileIds := map[string]TrAttachments{}
 	if len(awsS3Bucket) == 0 {
 		log.Fatal("Undefined env variable OPT_AWS_S3_BUCKET.")
 	}
@@ -271,7 +271,7 @@ func downloadCardAttachmentsUploadToAWSS3(card *trello.Card) map[string]chAttach
 			fmt.Printf("Skipped uploading file to AWS S3. File exist: %s\n", s3keyURL)
 		}
 
-		fileIds[name] = chAttachments{s3keyURL, f.IdMember}
+		fileIds[name] = TrAttachments{s3keyURL, f.IdMember}
 	}
 
 	return fileIds

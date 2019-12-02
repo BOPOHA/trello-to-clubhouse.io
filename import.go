@@ -82,10 +82,10 @@ func buildLinkFiles(card *Card, opts *ClubhouseOptions, um *UserMap) []int64 {
 			Name:       k,
 			Type:       "url",
 			URL:        v.Url,
-			UploaderID: um.GetCreator(v.TrelloIDCreator),
+			UploaderID: um.GetCreator(v.IDCreator),
 		}
-		fmt.Sprintf("CARD: %+v", lf)
 		r, err := opts.ClubhouseEntry.CreateLinkedFiles(lf)
+		fmt.Printf("CARD: %+v\n%+v\n", lf, r)
 		if err != nil {
 			fmt.Println("Fail to create linked file card name:", card.Name, "link:", v, "Err:", err)
 		} else {
