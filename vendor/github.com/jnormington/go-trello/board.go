@@ -67,6 +67,13 @@ type BoardBackground struct {
 	url    string `json:"url"`
 }
 
+type Label struct {
+	Id      string `json:"id"`
+	IdBoard string `json:"idBoard"`
+	Color   string `json:"color"`
+	Name    string `json:"name"`
+}
+
 func (c *Client) Boards() (boards []Board, err error) {
 	body, err := c.Get("/boards/")
 	if err != nil {
@@ -177,5 +184,14 @@ func (b *Board) Actions() (actions []Action, err error) {
 	for i := range actions {
 		actions[i].client = b.client
 	}
+	return
+}
+
+func (b *Board) Labels() (labels []Label, err error) {
+	body, err := b.client.Get("/boards/" + b.Id + "/labels")
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(body, &labels)
 	return
 }

@@ -16,6 +16,10 @@ type TrelloOptions struct {
 	User                   *trello.Member
 	ProcessImagesToDropbox bool
 	ProcessImagesToAWSS3   bool
+	TrelloExportedLable    struct {
+		ID    string
+		Exist bool
+	}
 }
 
 // SetupTrelloOptionsFromUser calls all the functions which consist of questions
@@ -28,6 +32,12 @@ func SetupTrelloOptionsFromUser() *TrelloOptions {
 	t.getCurrentUser()
 	t.getBoardsAndPromptUser()
 	t.getListsAndPromptUser()
+
+	id := t.GetLableIdByName(trelloExportedLable)
+	if len(id) > 0 {
+		t.TrelloExportedLable.ID = id
+		t.TrelloExportedLable.Exist = true
+	}
 
 	return &t
 }
@@ -161,4 +171,18 @@ func (t TrelloOptions) ListMembers() *[]trello.Member {
 	}
 
 	return &m
+}
+
+func (t TrelloOptions) GetLableIdByName(lableName string) string {
+	if len(lableName) == 0 {
+		return ""
+	}
+
+	lables, _ := t.Board.Labels()
+	for _, lable := range lables {
+		if lable.Name == trelloExportedLable {
+			return lable.Id
+		}
+	}
+	return ""
 }

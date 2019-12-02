@@ -8,12 +8,13 @@ import (
 )
 
 var (
-	clubHouseToken = os.Getenv("CLUBHOUSE_TOKEN")
-	trelloToken    = os.Getenv("TRELLO_TOKEN")
-	trelloKey      = os.Getenv("TRELLO_KEY")
-	dropboxToken   = os.Getenv("DROPBOX_TOKEN")
-	recreateCards  = os.Getenv("OPT_RECREATE_CARDS")
-	awsS3Bucket    = os.Getenv("OPT_AWS_S3_BUCKET")
+	clubHouseToken      = os.Getenv("CLUBHOUSE_TOKEN")
+	trelloToken         = os.Getenv("TRELLO_TOKEN")
+	trelloKey           = os.Getenv("TRELLO_KEY")
+	dropboxToken        = os.Getenv("DROPBOX_TOKEN")
+	recreateCards       = os.Getenv("OPT_RECREATE_CARDS")
+	awsS3Bucket         = os.Getenv("OPT_AWS_S3_BUCKET")
+	trelloExportedLable = os.Getenv("OPT_TRELLO_EXP_LBL")
 
 	stdinReader   = bufio.NewReader(os.Stdin)
 	errOutOfRange = "Number input is out of range. Try again"
@@ -34,6 +35,7 @@ func main() {
 	confirmAllOptionsBeforeImport(to, co)
 
 	ImportCardsIntoClubhouse(cards, co, um)
+	MarkTrelloCardsAsExportted(c, to)
 	fmt.Println("*** Looks like we finished go and have fun & joy with Clubhouse ***")
 }
 

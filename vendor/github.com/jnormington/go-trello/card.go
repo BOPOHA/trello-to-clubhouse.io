@@ -262,3 +262,22 @@ func (c *Card) MoveToPos(pos int) (*Card, error) {
 	newCard.client = c.client
 	return newCard, nil
 }
+
+// AddLableByID will add a label to a card
+// https://developers.trello.com/reference#label-object
+func (c *Card) AddLableByID(idLabel string) (*[]string, error) {
+	payload := url.Values{}
+	payload.Set("value", idLabel)
+
+	body, err := c.client.Post("/cards/"+c.Id+"/idLabels", payload)
+	if err != nil {
+		return nil, err
+	}
+
+	newIDs := &[]string{}
+	if err = json.Unmarshal(body, newIDs); err != nil {
+		return nil, err
+	}
+
+	return newIDs, nil
+}

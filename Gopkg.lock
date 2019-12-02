@@ -66,11 +66,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:450652a415d3ff9edc0a9d27cce295d0ca85a7529495b5eb0cba0e9c9b9d8c53"
+  digest = "1:01885a44fe48d72cd9873103ca8d1f25ac7562c7bfb83f201fee755f945c65ce"
   name = "github.com/jnormington/go-trello"
   packages = ["."]
   pruneopts = "UT"
-  revision = "ce4641f9d0f181b01f544df82979eea23481ac33"
+  revision = "677fbcb806443b4edf521766ce7b1dcaa0839dd5"
+  source = "github.com/BOPOHA/go-trello"
 
 [[projects]]
   branch = "master"
@@ -85,8 +86,8 @@
   analyzer-version = 1
   input-imports = [
     "github.com/aws/aws-sdk-go/aws",
-    "github.com/aws/aws-sdk-go/aws/credentials",
     "github.com/aws/aws-sdk-go/aws/session",
+    "github.com/aws/aws-sdk-go/service/s3",
     "github.com/aws/aws-sdk-go/service/s3/s3manager",
     "github.com/djthorpe/clubhouse-go",
     "github.com/jnormington/go-trello",
