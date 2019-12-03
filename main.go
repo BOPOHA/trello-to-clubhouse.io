@@ -15,6 +15,14 @@ var (
 	recreateCards       = os.Getenv("OPT_RECREATE_CARDS")
 	awsS3Bucket         = os.Getenv("OPT_AWS_S3_BUCKET")
 	trelloExportedLable = os.Getenv("OPT_TRELLO_EXP_LBL")
+	markerAlarFastFlow  = os.Getenv("OPT_ALAR_FAST_FLOW")
+
+	alarFastFlow = func() bool {
+		if len(markerAlarFastFlow) > 0 {
+			return true
+		}
+		return false
+	}()
 
 	stdinReader   = bufio.NewReader(os.Stdin)
 	errOutOfRange = "Number input is out of range. Try again"

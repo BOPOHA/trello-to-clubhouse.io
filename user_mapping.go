@@ -38,14 +38,16 @@ func NewUserMap(to *TrelloOptions, co *ClubhouseOptions) *UserMap {
 
 // SetupUserMapping calls all the internal prompt functions
 func (um *UserMap) SetupUserMapping() {
-	um.promptShouldGenerateCSV()
 
-	if um.GenerateCSV {
-		um.buildUserMapToFile()
-		fmt.Printf("*********************\n CSV generated: %s\n*********************\n", getCSVPath())
+	if !alarFastFlow {
+		um.promptShouldGenerateCSV()
+		if um.GenerateCSV {
+			um.buildUserMapToFile()
+			fmt.Printf("*********************\n CSV generated: %s\n*********************\n", getCSVPath())
+		}
+
+		um.promptReadyToReadCSV()
 	}
-
-	um.promptReadyToReadCSV()
 	um.buildUserMapFromCSV()
 }
 

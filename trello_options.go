@@ -27,8 +27,12 @@ type TrelloOptions struct {
 func SetupTrelloOptionsFromUser() *TrelloOptions {
 	var t TrelloOptions
 
-	t.promptUserShouldMigrateAttachmentsToDropbox()
-	t.promptUserShouldMigrateAttachmentsToAWSS3()
+	if !alarFastFlow {
+		t.promptUserShouldMigrateAttachmentsToDropbox()
+		t.promptUserShouldMigrateAttachmentsToAWSS3()
+	} else {
+		t.ProcessImagesToAWSS3 = true
+	}
 	t.getCurrentUser()
 	t.getBoardsAndPromptUser()
 	t.getListsAndPromptUser()
@@ -65,7 +69,7 @@ func (t *TrelloOptions) promptUserShouldMigrateAttachmentsToDropbox() {
 }
 func (t *TrelloOptions) promptUserShouldMigrateAttachmentsToAWSS3() {
 	fmt.Println("Would you like to migrate all attachments from trello cards?")
-	fmt.Println("This will entail downloading the attachments and uploading to ClubHouse")
+	fmt.Println("This will entail downloading the attachments and uploading to AWS S3")
 
 	for i, b := range yesNoOpts {
 		fmt.Printf("[%d] %s\n", i, b)

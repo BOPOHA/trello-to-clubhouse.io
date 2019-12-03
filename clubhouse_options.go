@@ -46,8 +46,11 @@ func SetupClubhouseOptions() *ClubhouseOptions {
 	co.getWorkflowStatesAndPromptUser()
 	co.getMembersAndPromptUser()
 	co.promptUserForStoryType()
-	co.promptUserIfAddCommentWithTrelloLink()
-
+	if !alarFastFlow {
+		co.promptUserIfAddCommentWithTrelloLink()
+	} else {
+		co.AddCommentWithTrelloLink = true
+	}
 	return &co
 }
 
