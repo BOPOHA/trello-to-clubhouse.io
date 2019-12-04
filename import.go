@@ -47,7 +47,7 @@ func ImportCardsIntoClubhouse(cards *[]Card, opts *ClubhouseOptions, um *UserMap
 	fmt.Printf(outputFormat+"\n", "Trello Card Link", "Import Status", "Error/Story ID")
 
 	for _, c := range *cards {
-		c.IDOwners = []string{}
+		c.IDOwners = []string{} // TODO: will need to delete
 		if recreateCardsBool == DeleteExists {
 			for _, id := range getStoryDuplicates(opts, c) {
 				err := opts.ClubhouseEntry.DeleteStory(id)
@@ -103,6 +103,7 @@ func buildClubhouseStory(card *Card, opts *ClubhouseOptions, um *UserMap) *ch.Cr
 		WorkflowStateID: opts.State.ID,
 		RequestedByID:   um.GetCreator(card.IDCreator),
 		OwnerIds:        mapOwnersFromTrelloCard(card, um),
+		StoryLinks:      []ch.CreateStoryLink{},
 		StoryType:       opts.StoryType,
 		FollowerIds:     []string{},
 		FileIds:         []int64{},
